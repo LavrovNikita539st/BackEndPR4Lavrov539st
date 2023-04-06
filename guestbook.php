@@ -2,11 +2,22 @@
 // TODO 1: PREPARING ENVIRONMENT: 1) session 2) functions
 session_start();
 
-if (!empty($_POST)){
-    $jsonString = json_encode($_POST);
-    $fileStream = fopen ('comments.csv','a');
-    fwrite($fileStream , $jsonString ."\n");
-    fclose($fileStream);
+$aConfig = require_once 'config.php';
+
+if (isset($_POST)){
+$db = mysqli_connect(
+    $aConfig['host'],
+    $aConfig['user'],
+    $aConfig['pass'],
+    $aConfig['name']
+);
+$query = "INSERT INTO comments (email, name, comment) VALUES (
+    '". $_POST['email']."',
+    '". $_POST['name']."',
+    '". $_POST['comment']."'
+    )";
+    mysqli_query($db, $query);
+    mysqli_close($db);
 }
 
 // TODO 2: ROUTING
@@ -75,23 +86,23 @@ if (!empty($_POST)){
         <div class="card-body">
             <div class="row">
                 <div class="col-sm-6">
-
-                    <!-- TODO: render guestBook comments   -->
                     <?php
-                    if ( file_exists ('comments.csv')){
-                        $fileStream = fopen('comments.csv', "r");
-                        while(!feof($fileStream)){
-                            $jsonString = fgets ($fileStream);
-                            $array = json_decode ($jsonString, true);
-                            if (empty ($array)) break ;
-                            echo $array ['email'] . '<br>';
-                            echo '<b>' . $array ['name'] . '<br>' . '</b>';
-                            echo $array ['comment'] . '<br>';
-                        }
-                        fclose ($fileStream );
+                    $db = mysqli_connect(
+                        $aConfig['host'],
+                        $aConfig['user'],
+                        $aConfig['pass'],
+                        $aConfig['name']
+                    );
+                    $query = 'SELECT * FROM comments';
+                    $dbResponse = mysqli_query($db, $query);
+                    $aComments = mysqli_fetch_all($dbResponse, MYSQLI_ASSOC);
+                    mysqli_close($db);
+                    foreach ($aComments as $comment){
+                        echo $comment ['email'] . '<br>';
+                        echo '<b>' . $comment ['name'] . '<br>' . '</b>';
+                        echo $comment ['comment'] . '<br>';
                     }
                     ?>
-
                 </div>
             </div>
         </div>
